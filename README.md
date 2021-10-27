@@ -1,0 +1,2 @@
+# xlog
+Application logging library
