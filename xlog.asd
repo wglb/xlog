@@ -9,5 +9,5 @@
                (read vers))
 			   
   :serial t
-  :components ((:file "package")
+  :components ((:file "xlog-pkg")
                (:file "xlog")))
