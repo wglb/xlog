@@ -1,0 +1,232 @@
+;;;; xlog.lisp
+
+(in-package #:xlog)
+
+(declaim (optimize (speed 0) (safety 3) (debug 3) (space 0)))
+
+(in-package #:xlog)
+
+(defparameter *epoch-offset* 2208988800 #+nil (- (get-universal-time) (sb-ext:get-time-of-day)))
+
+(defvar *log-file*)
+(defvar *the-log-file-name*)
+(defparameter *log-file-stack* nil)
+(defparameter *log-file-name-stack* nil)
+
+(defvar *previous-log-file*)
+
+(defvar *alertfile*)
+
+(defparameter *debug-level* 4)
+(defmacro debugc (val stmt)
+  `(when (<= ,val *debug-level*)
+    ,stmt))
+
+(defun the-log-file ()
+  "Answer the log file"
+  (if (boundp '*log-file*)
+	  *log-file*
+	  nil))
+
+(defun the-alert-file ()
+  "Answer the log file"
+  (if (boundp '*alertfile*)
+	  *alertfile*
+	  nil))
+
+(defmacro xlogf (fmt &rest vars)
+  "Write with format to log file"
+  `(xlog (format nil ,fmt ,@vars)))
+
+(defun xalert (str)
+  (open-alert-file)
+  (write-line (formatted-current-time-micro str)
+			  (the-alert-file))
+  (xlog str)
+  (close-alert-file))
+
+(defmacro xalertf (fmt &rest vars)
+  "Write with format to log file"
+  `(xalert (format nil ,fmt ,@vars)))
+
+(defmacro xlogff (fmt &rest vars)
+  "Write with format to log file"
+  `(prog1
+    (xlog (format nil ,fmt ,@vars))
+    (force-output (the-log-file))))
+
+(defmacro xlogft (fmt &rest vars) 
+  "write formatted to log file and console"
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+	   (let ((rv (xlogf "xlogf: ~A" ,str)))
+		 (format t "~A~%" rv)
+		 (xlogfin)
+		 rv))))
+
+(defmacro xlogntf (fmt &rest vars) 
+  "Write formatted to log file without time stamp"
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+       (xlognt ,str))))
+
+(defmacro xlogntft (fmt &rest vars) 
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+       (format t "~a" ,str)
+       (format t "~%")
+       (xlognt ,str))))
+
+(defun pathname-as-directory (pathspec)
+  "Converts the non-wild pathname designator PATHSPEC to directory form. Stolen from gigamonkeys"
+  (let ((pathname (pathname pathspec)))
+    (when (wild-pathname-p pathname)
+      (error "Can't reliably convert wild pathnames."))
+    (cond ((not (directory-pathname-p pathspec))
+           (make-pathname :directory (append (or (pathname-directory pathname)
+                                                 (list :relative))
+                                             (list (file-namestring pathname)))
+                          :name nil
+                          :type nil
+                          :defaults pathname))
+          (t pathname))))
+
+(defun dates-ymd (dates)
+  (multiple-value-bind (s min h d m y doy dstflag offset)
+      (decode-universal-time (get-universal-time))
+    (declare (ignore doy))
+    (let* ((filename 
+			(cond ((equal dates :hms)
+                   (format nil
+                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
+                           y m d 
+                           (+ h offset (if dstflag -1 0))
+                           min s))
+				  ((equal dates :hour)
+                   (format nil
+                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
+                           y m d 
+						   h))
+                  (dates (format nil
+                                 "~4,'0D-~2,'0D-~2,'0D_"
+                                 y m d))
+                  (t (format nil "")))))
+      filename)))
+
+(defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
+  (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
+	(when (the-log-file)
+	  (if show-log-file-name
+		  (xlogff "xlog: current ~a to open new " filename))
+      (push (the-log-file) *log-file-stack*)
+	  (push *the-log-file-name* *log-file-name-stack*))
+	
+	(let* ((*print-pretty* nil)
+           (pathname 
+			(cond (dir 
+				   (debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (pathname-directory (pathname-as-directory  dir))))
+				   (make-pathname :directory (pathname-directory (pathname-as-directory  dir)) :name filename :type extension)) 
+                  (t 
+				   (make-pathname :name filename :type extension))))) 
+	  (setq *the-log-file-name* pathname)
+      (when (equal show-log-file-name :both)
+		(xlogntft "xlog: opening log pathname as ~a~%" pathname))
+	  (handler-case
+		  (setf *log-file* (open (ensure-directories-exist pathname)
+							 :direction :output
+							 :if-exists append-or-replace
+							 :if-does-not-exist :create
+							 :external-format :utf8))
+		(error (d)
+		  (format t "open-log-file: error ~a for log file ~a~%" d pathname)
+		  (setf *log-file* nil)))
+	  (xlogf "xlog: ~a  beginning of log-file ~%   ~a" append-or-replace pathname))))
+
+(defun close-log-file ()
+  (when (the-log-file)
+	(xlogf "xlog: end of log-file ~a" *the-log-file-name*)
+    (force-output (the-log-file))
+    (close (the-log-file)))
+  (setf *log-file* (pop *log-file-stack*))
+  (setf *the-log-file-name* (pop *log-file-name-stack*))
+  (setq *previous-log-file* nil))
+
+(defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
+							  &body body)
+  `(progn
+	 (when ,dir
+	   (ensure-directories-exist ,dir :verbose t))
+	 
+	 (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
+	 (unwind-protect (progn ,@body)
+	   (close-log-file ))))
+
+(defparameter *alert-file-name* "alert-file")
+
+(defun  set-alert-file-name (which)
+  (setf *alert-file-name* which))
+
+(defun open-alert-file ()
+  (when (the-alert-file)
+	(close-alert-file))
+  (let* ((filename (format nil "~A" *alert-file-name*))
+         (pathname (make-pathname :name filename :type "alog")))
+	
+    (debugc 5 (xlogntf "xlog: log pathname is ~a" (file-namestring pathname)))
+    (setf *alertfile* (open (ensure-directories-exist pathname)
+                            :direction :output
+							:if-exists :supersede
+							:if-does-not-exist :create
+							:external-format :utf8))))
+
+(defun formatted-current-time-micro (str)
+  (multiple-value-bind (seconds microsec)
+      (sb-ext:get-time-of-day)
+    (multiple-value-bind (s min h d m y)
+        (decode-universal-time (+ *epoch-offset* seconds))
+      (format nil "~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d.~6,'0d ~A" y m d h min s microsec str))))
+
+(defun formatted-file-time (lockname)
+  (if (probe-file lockname)
+	  (let ((seconds (sb-posix:stat-mtime (sb-posix:stat lockname))))
+		(multiple-value-bind (s min h d m y)
+			(decode-universal-time (+ *epoch-offset* seconds))
+		  (declare (ignorable s))
+		  (let ((old (- (sb-ext:get-time-of-day) seconds)))
+			(format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d, ~a seconds old" y m d h min old))))
+	  (format nil "~a does not exist" lockname)))
+
+(defun formatted-current-time ()
+  (multiple-value-bind (seconds microsec)
+      (sb-ext:get-time-of-day)
+    (declare (ignorable microsec))
+    (multiple-value-bind (s min h d m y)
+        (decode-universal-time (+ *epoch-offset* seconds))
+      (declare (ignorable s))
+      (format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d" y m d h min))))
+
+(defun xlog (str)
+  "write time-stamped to log file"
+  (write-line (formatted-current-time-micro str) (the-log-file)))
+
+(defun xlognt (str)
+  "Write to  log file"
+  (write-line str (the-log-file)))
+
+(defun xlogfin ()
+  (force-output (the-log-file)))
+
+(defun close-alert-file ()
+  (when (the-alert-file)
+    (force-output *alertfile*)
+    (close *alertfile*))
+  (setf *alertfile* nil))
+
+
+(defun test-log-file ()
+  (with-open-log-file ("radio")
+	(xlogntf "this is a radio")
+	(with-open-log-file ("deskdrawer")
+	  (xlogntf "this is a deawer in the desk"))
+	(xlogntf "this should be another radio"))
+  (xlogntf "This should go nowhere"))
