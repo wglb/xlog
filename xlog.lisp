@@ -1,4 +1,26 @@
 ;;;; xlog.lisp
+;; Application logging.
+;; Features:
+;; 1. Optinally Time-stamped formatted log enttries
+;;    2021-10-27 13:55:36.423013 xlog: end of log-file 2021-10-27_dispatch-rescancanm.log
+;; 2. Log files can be appended to or superseded
+;;    
+;; 3. Log directory can be specified
+;;    (with-open-log-file (<filespec> :dir "<log file directory>") ... )
+;; 4. Log file extension can be specified
+;;    (with-open-log-file (<filespec> :extension "out") ... )
+;; 5. Log entry can be also pushed to standard out
+;;    Usual output is (xlogf "<format string>" <val1> <val2>) ;; in the manner of (format ...)
+;;    Also to standard output is (xlogft "<format string>" ... _) ;; goes to standard out
+;; 6. Alert file support for status reporting
+;;    Set alert file name: (set-alert-file-name "<name of alert file>").
+;;    (xalert "simple string") ;; opens alert file, writes values, closes alert file
+;;    (xlalertf "format string" <val1> ... )
+;; 7. Support for date-stamped file names with options for hour,minute,second resulution, hour resolution, date only, or no date.
+;;    (with-open-log-file ("filespec" :dates (t :hms :hour :dates)
+;; 8. Log files can be nested. TODO -- explain this better
+;;    The 'with-open-log-file' macro wraps code in the manner of 'with-open-file'. If you nest the calls, upon closing the nested
+;;    open, the original one resumes. This can ease reading detail processes within a global process.
 
 (in-package #:xlog)
 
@@ -214,6 +236,7 @@
   (write-line str (the-log-file)))
 
 (defun xlogfin ()
+  "Flush the log file output"
   (force-output (the-log-file)))
 
 (defun close-alert-file ()
@@ -221,7 +244,6 @@
     (force-output *alertfile*)
     (close *alertfile*))
   (setf *alertfile* nil))
-
 
 (defun test-log-file ()
   (with-open-log-file ("radio")
