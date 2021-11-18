@@ -1,7 +1,7 @@
 ;;;; package.lisp
 
 (defpackage #:xlog
-  (:use #:cl #:uiop)
+  (:use #:cl )
   (:export #:xlog
            #:xlogf
 		   #:xalert
