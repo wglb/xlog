@@ -104,7 +104,7 @@
   (let ((pathname (pathname pathspec)))
     (when (wild-pathname-p pathname)
       (error "Can't reliably convert wild pathnames."))
-    (cond ((not (directory-pathname-p pathspec))
+    (cond ((not (uiop:directory-pathname-p pathspec))
            (make-pathname :directory (append (or (pathname-directory pathname)
                                                  (list :relative))
                                              (list (file-namestring pathname)))
