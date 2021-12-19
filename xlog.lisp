@@ -28,18 +28,97 @@
 
 (in-package #:xlog)
 
-(defparameter *epoch-offset* 2208988800 #+nil (- (get-universal-time) (sb-ext:get-time-of-day)))
 
 (defvar *log-file*)
+
 (defvar *the-log-file-name*)
+
 (defparameter *log-file-stack* nil)
+
 (defparameter *log-file-name-stack* nil)
 
 (defvar *previous-log-file*)
 
 (defvar *alertfile*)
 
+(defparameter *epoch-offset* 2208988800 #+nil (- (get-universal-time) (sb-ext:get-time-of-day)))
+
+(defun unpack-utc-with-hyphens(utc)
+  " note that this expects hyphens, and does local time, not z"
+  ;;             1111111111222222
+  ;;   01234567890123456789012345
+  ;;60=2007-09-07 13:27:53
+  ;;60=2007-09-07 13:27:53.123
+  ;;60=2007-09-07 13:27:53.123456
+  (let* ((year (parse-integer (subseq utc 0 4)))
+         (month (parse-integer (subseq utc 5 7)))
+         (day (parse-integer (subseq utc 8 10)))
+         (hour (parse-integer (subseq utc 11 13)))
+         (minute (parse-integer (subseq utc 14 16)))
+         (second (parse-integer (subseq utc 17 19)))
+         (gmt (encode-universal-time second minute hour day month year))
+         (ms (if (> (length utc) 21)
+                 (parse-integer (subseq utc 20 23))
+                 nil)))
+    (values gmt ms)))
+
+(defun calc-elapsed-time  (tim)
+  "For a timestampe formatted by 'formatted-current-time-micro, how long ago was the 'tim' timestamp"
+  (- (get-universal-time) (unpack-utc-with-hyphens tim)))
+
+(defun formatted-current-time-micro (str)
+  "Produce a formatted timestamp from the current time "
+  (multiple-value-bind (seconds microsec)
+      (sb-ext:get-time-of-day)
+    (multiple-value-bind (s min h d m y)
+        (decode-universal-time (+ *epoch-offset* seconds))
+      (format nil "~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d.~6,'0d ~A" y m d h min s microsec str))))
+
+(defun formatted-file-time (lockname)
+  "answer the mtime (formatted) of a file"
+  (if (probe-file lockname)
+	  (let ((seconds (sb-posix:stat-mtime (sb-posix:stat lockname))))
+		(multiple-value-bind (s min h d m y)
+			(decode-universal-time (+ *epoch-offset* seconds))
+		  (declare (ignorable s))
+		  (let ((old (- (sb-ext:get-time-of-day) seconds)))
+			(format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d, ~a seconds old" y m d h min old))))
+	  (format nil "~a does not exist" lockname)))
+
+(defun formatted-current-time ()
+  (multiple-value-bind (seconds microsec)
+      (sb-ext:get-time-of-day)
+    (declare (ignorable microsec))
+    (multiple-value-bind (s min h d m y)
+        (decode-universal-time (+ *epoch-offset* seconds))
+      (declare (ignorable s))
+      (format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d" y m d h min))))
+
+(defun dates-ymd (dates)
+  "Create a file name from the current time, including optionally hour, or hours minutes and seconds as part of the file name"
+  (multiple-value-bind (s min h d m y doy dstflag offset)
+      (decode-universal-time (get-universal-time))
+    (declare (ignore doy))
+    (let* ((filename 
+			(cond ((equal dates :hms)
+                   (format nil
+                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
+                           y m d 
+                           (+ h offset (if dstflag -1 0))
+                           min s))
+				  ((equal dates :hour)
+                   (format nil
+                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
+                           y m d 
+						   h))
+                  (dates (format nil
+                                 "~4,'0D-~2,'0D-~2,'0D_"
+                                 y m d))
+                  (t (format nil "")))))
+      filename)))
+
 (defparameter *debug-level* 4)
+
 (defmacro debugc (val stmt)
   `(when (<= ,val *debug-level*)
     ,stmt))
@@ -101,10 +180,10 @@
 
 (defun pathname-as-directory (pathspec)
   "Converts the non-wild pathname designator PATHSPEC to directory form. Stolen from gigamonkeys"
-  (let ((pathname (pathname pathspec)))
+  (let ((pathname (pathname-name  pathspec)))
     (when (wild-pathname-p pathname)
       (error "Can't reliably convert wild pathnames."))
-    (cond ((not (directory-pathname-p pathspec))
+    (cond ((not (uiop:directory-pathname-p pathspec))
            (make-pathname :directory (append (or (pathname-directory pathname)
                                                  (list :relative))
                                              (list (file-namestring pathname)))
@@ -113,27 +192,6 @@
                           :defaults pathname))
           (t pathname))))
 
-(defun dates-ymd (dates)
-  (multiple-value-bind (s min h d m y doy dstflag offset)
-      (decode-universal-time (get-universal-time))
-    (declare (ignore doy))
-    (let* ((filename 
-			(cond ((equal dates :hms)
-                   (format nil
-                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
-                           y m d 
-                           (+ h offset (if dstflag -1 0))
-                           min s))
-				  ((equal dates :hour)
-                   (format nil
-                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
-                           y m d 
-						   h))
-                  (dates (format nil
-                                 "~4,'0D-~2,'0D-~2,'0D_"
-                                 y m d))
-                  (t (format nil "")))))
-      filename)))
 
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
@@ -201,31 +259,6 @@
 							:if-does-not-exist :create
 							:external-format :utf8))))
 
-(defun formatted-current-time-micro (str)
-  (multiple-value-bind (seconds microsec)
-      (sb-ext:get-time-of-day)
-    (multiple-value-bind (s min h d m y)
-        (decode-universal-time (+ *epoch-offset* seconds))
-      (format nil "~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d.~6,'0d ~A" y m d h min s microsec str))))
-
-(defun formatted-file-time (lockname)
-  (if (probe-file lockname)
-	  (let ((seconds (sb-posix:stat-mtime (sb-posix:stat lockname))))
-		(multiple-value-bind (s min h d m y)
-			(decode-universal-time (+ *epoch-offset* seconds))
-		  (declare (ignorable s))
-		  (let ((old (- (sb-ext:get-time-of-day) seconds)))
-			(format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d, ~a seconds old" y m d h min old))))
-	  (format nil "~a does not exist" lockname)))
-
-(defun formatted-current-time ()
-  (multiple-value-bind (seconds microsec)
-      (sb-ext:get-time-of-day)
-    (declare (ignorable microsec))
-    (multiple-value-bind (s min h d m y)
-        (decode-universal-time (+ *epoch-offset* seconds))
-      (declare (ignorable s))
-      (format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d" y m d h min))))
 
 (defun xlog (str)
   "write time-stamped to log file"

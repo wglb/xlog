@@ -26,4 +26,5 @@
            #:*debug-level*
            #:dates-ymd
 		   #:pathname-as-directory
+		   #:calc-elapsed-time
            #:debugc))
