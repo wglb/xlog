@@ -181,8 +181,9 @@
 (defun pathname-as-directory (pathspec)
   "Converts the non-wild pathname designator PATHSPEC to directory form. Stolen from gigamonkeys"
   (let ((pathname (pathname-name  pathspec)))
-    (when (wild-pathname-p pathname)
-      (error "Can't reliably convert wild pathnames."))
+    (if pathname
+		(when (wild-pathname-p pathname)
+		  (error "Can't reliably convert wild pathnames.")))
     (cond ((not (uiop:directory-pathname-p pathspec))
            (make-pathname :directory (append (or (pathname-directory pathname)
                                                  (list :relative))
