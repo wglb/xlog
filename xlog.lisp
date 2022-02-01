@@ -206,7 +206,7 @@
            (pathname 
 			(cond (dir 
 				   (debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (pathname-directory (pathname-as-directory  dir))))
-				   (merge-pathnames *default-pathname-defaults* (make-pathname :name filename :type extension :directory  dir))) 
+				   (make-pathname :directory `(:relative ,dir) :name basename :type extension )) 
                   (t 
 				   (make-pathname :name filename :type extension))))) 
 	  (setq *the-log-file-name* pathname)
