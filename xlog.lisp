@@ -160,7 +160,7 @@
   "write formatted to log file and console"
   (let ((str (gensym)))
     `(let ((,str (format nil ,fmt ,@vars)))
-	   (let ((rv (xlogf "xlogf: ~A" ,str)))
+	   (let ((rv (xlogf "~A" ,str)))
 		 (format t "~A~%" rv)
 		 (xlogfin)
 		 rv))))
