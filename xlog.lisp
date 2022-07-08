@@ -50,15 +50,17 @@
   ;;60=2007-09-07 13:27:53
   ;;60=2007-09-07 13:27:53.123
   ;;60=2007-09-07 13:27:53.123456
-  (let* ((year (parse-integer (subseq utc 0 4)))
-         (month (parse-integer (subseq utc 5 7)))
-         (day (parse-integer (subseq utc 8 10)))
-         (hour (parse-integer (subseq utc 11 13)))
-         (minute (parse-integer (subseq utc 14 16)))
-         (second (parse-integer (subseq utc 17 19)))
-         (gmt (encode-universal-time second minute hour day month year))
+  (let* ((year (parse-integer (subseq utc 0 4) :junk-allowed t))
+         (month (parse-integer (subseq utc 5 7) :junk-allowed t))
+         (day (parse-integer (subseq utc 8 10) :junk-allowed t))
+         (hour (parse-integer (subseq utc 11 13) :junk-allowed t))
+         (minute (parse-integer (subseq utc 14 16) :junk-allowed t))
+         (second (parse-integer (subseq utc 17 19) :junk-allowed t))
+         (gmt (if (and second minute hour day month year)
+				  (encode-universal-time second minute hour day month year)
+				  0))
          (ms (if (> (length utc) 21)
-                 (parse-integer (subseq utc 20 23))
+                 (parse-integer (subseq utc 20 23) :junk-allowed t)
                  nil)))
     (values gmt ms)))
 
