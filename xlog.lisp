@@ -125,6 +125,10 @@
   `(when (<= ,val *debug-level*)
     ,stmt))
 
+(defmacro xdebug (val stmt)
+  (when (<= *debug-level* val)
+	`,stmt))
+
 (defun the-log-file ()
   "Answer the log file"
   (if (boundp '*log-file*)
