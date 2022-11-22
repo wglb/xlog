@@ -37,8 +37,6 @@
 
 (defparameter *log-file-name-stack* nil)
 
-(defvar *previous-log-file*)
-
 (defvar *alertfile*)
 
 (defparameter *epoch-offset* 2208988800 #+nil (- (get-universal-time) (sb-ext:get-time-of-day)))
@@ -204,7 +202,7 @@
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
 	(when (the-log-file)
 	  (if show-log-file-name
-		  (xlogft "xlog: current ~a to open new " filename))
+		  (xlogft "xlog: prev ~a current ~a to open new " *the-log-file-name* filename))
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
 	
@@ -235,8 +233,7 @@
     (force-output (the-log-file))
     (close (the-log-file)))
   (setf *log-file* (pop *log-file-stack*))
-  (setf *the-log-file-name* (pop *log-file-name-stack*))
-  (setq *previous-log-file* nil))
+  (setf *the-log-file-name* (pop *log-file-name-stack*)))
 
 (defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
 							  &body body)
