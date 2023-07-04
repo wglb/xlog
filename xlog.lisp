@@ -210,7 +210,10 @@
            (pathname 
 			(cond (dir 
 				   (debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (pathname-directory (pathname-as-directory  dir))))
-				   (make-pathname :directory `(:relative ,dir) :name filename :type extension )) 
+				   #+nil (make-pathname :directory `(:relative ,dir) :name filename :type extension )
+				   (let ((pth (make-pathname :directory `,dir :name filename :type extension )))
+					 pth))
+				  
                   (t 
 				   (make-pathname :name filename :type extension))))) 
 	  (setq *the-log-file-name* pathname)
@@ -238,7 +241,7 @@
 (defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
 							  &body body)
   `(progn
-	 (when ,dir
+#+nil	 (when ,dir
 	   (ensure-directories-exist ,dir :verbose t))
 	 
 	 (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
