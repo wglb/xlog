@@ -205,7 +205,6 @@
 		  (xlogft "xlog: prev ~a current ~a to open new " *the-log-file-name* filename))
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
-	
 	(let* ((*print-pretty* nil)
            (pathname 
 			(cond (dir 
@@ -241,12 +240,11 @@
 (defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
 							  &body body)
   `(progn
-#+nil	 (when ,dir
-	   (ensure-directories-exist ,dir :verbose t))
-	 
-	 (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
-	 (unwind-protect (progn ,@body)
-	   (close-log-file ))))
+	 (let ()
+	   (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
+	   (unwind-protect (progn ,@body)
+		 (close-log-file )))))
+
 
 (defparameter *alert-file-name* "alert-file")
 
