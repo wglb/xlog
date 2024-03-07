@@ -4,6 +4,7 @@
   (:use #:cl )
   (:export #:xlog
            #:xlogf
+		   #:*epoch-offset*
 		   #:xalert
 		   #:xalertf
            #:xlogf

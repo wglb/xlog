@@ -199,6 +199,7 @@
 
 
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
+  ;; TODO test that directory :dir is useable; else fix it to be general, e.g., take a string
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
 	(when (the-log-file)
 	  (if show-log-file-name
@@ -208,9 +209,9 @@
 	(let* ((*print-pretty* nil)
            (pathname 
 			(cond (dir 
-				   (debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (pathname-directory (pathname-as-directory  dir))))
-				   #+nil (make-pathname :directory `(:relative ,dir) :name filename :type extension )
+				   (debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (type-of dir)))
 				   (let ((pth (make-pathname :directory `,dir :name filename :type extension )))
+					 (debugc 5 (xlogntf "xlog: resulting odd case path ~s" pth))
 					 pth))
 				  
                   (t 
