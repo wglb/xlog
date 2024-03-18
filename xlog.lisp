@@ -182,22 +182,6 @@
        (format t "~%")
        (xlognt ,str))))
 
-(defun pathname-as-directory (pathspec)
-  "Converts the non-wild pathname designator PATHSPEC to directory form. Stolen from gigamonkeys"
-  (let ((pathname (pathname-name  pathspec)))
-    (if pathname
-		(when (wild-pathname-p pathname)
-		  (error "Can't reliably convert wild pathnames.")))
-    (cond ((not (uiop:directory-pathname-p pathspec))
-           (make-pathname :directory (append (or (pathname-directory pathname)
-                                                 (list :relative))
-                                             (list (file-namestring pathname)))
-                          :name nil
-                          :type nil
-                          :defaults pathname))
-          (t pathname))))
-
-
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   ;; TODO test that directory :dir is useable; else fix it to be general, e.g., take a string
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))

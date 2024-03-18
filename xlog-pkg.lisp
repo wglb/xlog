@@ -1,7 +1,7 @@
 ;;;; package.lisp
 
 (defpackage #:xlog
-  (:use #:cl )
+  (:use #:cl #:uiop)
   (:export #:xlog
            #:xlogf
 		   #:*epoch-offset*
@@ -26,6 +26,5 @@
            #:close-log-file
            #:*debug-level*
            #:dates-ymd
-		   #:pathname-as-directory
 		   #:calc-elapsed-time
            #:debugc))
