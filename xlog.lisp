@@ -210,7 +210,10 @@
 							 :if-does-not-exist :create
 							 :external-format :utf8)))
 			(if show-log-file-name
-				(xlogft "xlog: opening new: ~s" (probe-file *log-file*)))
+				(xlogft "xlog: opening new: ~s" (if *log-file*
+													(probe-file *log-file*)
+													"<none>")))
+			
 			(setf *log-file* nlf))
 		
 		(error (d)
