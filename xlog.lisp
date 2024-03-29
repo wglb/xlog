@@ -212,7 +212,7 @@
 							 :if-does-not-exist :create
 							 :external-format :utf8)))
 			(if show-log-file-name
-				(xlogft "xlog: nest, cur ~s opening new: ~s"
+				(xlogft "xlog: nest, cur ~s new: ~s"
 						(if prev-log-file
 							(if (the-log-file)
 								(probe-file (the-log-file))
