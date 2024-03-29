@@ -41,6 +41,9 @@
 
 (defparameter *epoch-offset* 2208988800 #+nil (- (get-universal-time) (sb-ext:get-time-of-day)))
 
+(defun xlog-version ()
+  (slot-value (asdf:find-system 'xlog) 'asdf:version))
+
 (defun unpack-utc-with-hyphens(utc)
   " note that this expects hyphens, and does local time, not z"
   ;;             1111111111222222
@@ -184,10 +187,9 @@
 
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   ;; TODO test that directory :dir is useable; else fix it to be general, e.g., take a string
-  (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
+  (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
+		(prev-log-file *log-file*))
 	(when (the-log-file)
-	  (if show-log-file-name
-		  (xlogft "xlog: prev ~a current ~a; opening new: " *the-log-file-name* filename))
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
 	(let* ((*print-pretty* nil)
@@ -210,10 +212,13 @@
 							 :if-does-not-exist :create
 							 :external-format :utf8)))
 			(if show-log-file-name
-				(xlogft "xlog: opening new: ~s" (if *log-file*
-													(probe-file *log-file*)
-													"<none>")))
-			
+				(xlogft "xlog: nesting--cur ~s opening new: ~s"
+						(if prev-log-file
+							(probe-file *log-file*)
+							"<none>")
+						(if nlf
+							(probe-file nlf)
+							"<none>")))
 			(setf *log-file* nlf))
 		
 		(error (d)
@@ -277,9 +282,9 @@
   (setf *alertfile* nil))
 
 (defun test-log-file ()
-  (with-open-log-file ("radio")
-	(xlogntf "this is a radio")
-	(with-open-log-file ("deskdrawer")
-	  (xlogntf "this is a deawer in the desk"))
-	(xlogntf "this should be another radio"))
+  (with-open-log-file ("original")
+	(xlogntf "this is a original")
+	(with-open-log-file ("inner")
+	  (xlogntf "this is a drawer in the desk"))
+	(xlogntf "this should be another original"))
   (xlogntf "This should go nowhere"))

@@ -5,6 +5,7 @@
   (:export #:xlog
            #:xlogf
 		   #:*epoch-offset*
+		   #:xlog-version
 		   #:xalert
 		   #:xalertf
            #:xlogf
