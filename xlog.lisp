@@ -187,7 +187,7 @@
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
 	(when (the-log-file)
 	  (if show-log-file-name
-		  (xlogft "xlog: prev ~a current ~a to open new " *the-log-file-name* filename))
+		  (xlogft "xlog: prev ~a current ~a; opening new: " *the-log-file-name* filename))
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
 	(let* ((*print-pretty* nil)
