@@ -4,7 +4,7 @@
   :description "Application logger with several features"
   :author "wglb <wgl@ciex-security>"
   :license  "Copyright (c) 2008-2024 Ciex, Inc All rights reserved"
-  :version "1.3.26"
+  :version "1.3.27"
   :serial t
   :components ((:file "xlog-pkg")
                (:file "xlog")))

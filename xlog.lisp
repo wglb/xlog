@@ -188,7 +188,7 @@
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   ;; TODO test that directory :dir is useable; else fix it to be general, e.g., take a string
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
-		(prev-log-file *log-file*))
+		(prev-log-file (the-log-file)))
 	(when (the-log-file)
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
@@ -212,9 +212,11 @@
 							 :if-does-not-exist :create
 							 :external-format :utf8)))
 			(if show-log-file-name
-				(xlogft "xlog: nesting--cur ~s opening new: ~s"
+				(xlogft "xlog: nest, cur ~s opening new: ~s"
 						(if prev-log-file
-							(probe-file *log-file*)
+							(if (the-log-file)
+								(probe-file (the-log-file))
+								"<none>")
 							"<none>")
 						(if nlf
 							(probe-file nlf)
