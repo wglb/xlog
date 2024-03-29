@@ -204,14 +204,19 @@
       (when (equal show-log-file-name :both)
 		(xlogntft "xlog: opening log pathname as ~a~%" pathname))
 	  (handler-case
-		  (setf *log-file* (open (ensure-directories-exist pathname)
+		  (let ((nlf (open (ensure-directories-exist pathname)
 							 :direction :output
 							 :if-exists append-or-replace
 							 :if-does-not-exist :create
-							 :external-format :utf8))
+							 :external-format :utf8)))
+			(if show-log-file-name
+				(xlogft "xlog: opening new: ~s" (probe-file *log-file*)))
+			(setf *log-file* nlf))
+		
 		(error (d)
 		  (format t "open-log-file: error ~a for log file ~a~%" d pathname)
 		  (setf *log-file* nil)))
+	  
 	  (xlogf "xlog: ~a  beginning of log-file ~%   ~a" append-or-replace pathname))))
 
 (defun close-log-file ()
