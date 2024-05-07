@@ -168,6 +168,7 @@
   (let ((str (gensym)))
     `(let ((,str (format nil ,fmt ,@vars)))
 	   (let ((rv (xlogf "~A" ,str)))
+		 (fresh-line)
 		 (format t "~A~%" rv)
 		 (xlogfin)
 		 rv))))
@@ -181,6 +182,7 @@
 (defmacro xlogntft (fmt &rest vars) 
   (let ((str (gensym)))
     `(let ((,str (format nil ,fmt ,@vars)))
+	   (fresh-line)
        (format t "~a" ,str)
        (format t "~%")
        (xlognt ,str))))
@@ -227,7 +229,7 @@
 		  (format t "open-log-file: error ~a for log file ~a~%" d pathname)
 		  (setf *log-file* nil)))
 	  
-	  (xlogf "xlog: ~a  beginning of log-file ~%   ~a" append-or-replace pathname))))
+	  (xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))))
 
 (defun close-log-file ()
   (when (the-log-file)
@@ -267,10 +269,12 @@
 
 (defun xlog (str)
   "write time-stamped to log file"
+  (fresh-line (the-log-file))
   (write-line (formatted-current-time-micro str) (the-log-file)))
 
 (defun xlognt (str)
   "Write to  log file"
+  (fresh-line (the-log-file))
   (write-line str (the-log-file)))
 
 (defun xlogfin ()
