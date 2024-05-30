@@ -14,14 +14,14 @@ Quick look at features:
   `(with-open-log-file (<filespec> :extension "out") ... )`
 
 * Log entry can be also pushed to standard out
-   Usual output is (xlogf "<format string>" <val1> <val2>) ;; in the manner of (format ...)
+   Usual output is (xlogf "<format string>" <val1> <val2>) ; in the manner of (format ...)
    Copy to standard output is 
    
    `(xlogft "<format string>" ... _)`
 * Alert file support for status reporting
    Set alert file name: `(set-alert-file-name "<name of alert file>").`
    
-   `(xalert "simple string")` ;; opens alert file, writes values, closes alert file
+   `(xalert "simple string")` ; opens alert file, writes values, closes alert file
    `(xlalertf "format string" <val1> ... )`
 * Support for date-stamped file names with options for hour,minute,second resulution, hour resolution, date only, or no date.
    `(with-open-log-file ("filespec" :dates (t :hms :hour :dates)`
