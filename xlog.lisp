@@ -137,7 +137,7 @@
 	  nil))
 
 (defun the-alert-file ()
-  "Answer the log file"
+  "Answer the alert file"
   (if (boundp '*alertfile*)
 	  *alertfile*
 	  nil))
@@ -147,6 +147,7 @@
   `(xlog (format nil ,fmt ,@vars)))
 
 (defun xalert (str)
+  "Write an alert, copied to the log file"
   (open-alert-file)
   (write-line (formatted-current-time-micro str)
 			  (the-alert-file))
@@ -154,7 +155,7 @@
   (close-alert-file))
 
 (defmacro xalertf (fmt &rest vars)
-  "Write with format to log file"
+  "Write with format to alsert"
   `(xalert (format nil ,fmt ,@vars)))
 
 (defmacro xlogff (fmt &rest vars)
