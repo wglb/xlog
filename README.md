@@ -32,9 +32,15 @@ Features:
 
 Functions:
 
-xlog-version
-- Answer the version  
+### Answer the version  
 
-unpack-utc-with-hyphens(utc-string)
-- Unpack a utc time that has hyphens.
+
+```common-lisp
+(xlog-version)```
+
+### Unpack a utc time that has hyphens.
+
+```common-lisp
+unpack-utc-with-hyphens(utc-string)```
+
 
