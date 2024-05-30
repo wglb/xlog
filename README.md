@@ -36,11 +36,15 @@ Functions:
 
 
 ```common-lisp
-(xlog-version)```
+(xlog-version)
+```
 
 ### Unpack a utc time that has hyphens.
 
+For an example string `2024-05-30 00:00:01.593760`
+
 ```common-lisp
-unpack-utc-with-hyphens(utc-string)```
+unpack-utc-with-hyphens(utc-string)
+```
 
 
