@@ -14,7 +14,6 @@
            #:xlogntf
            #:xlogntft
            #:xlogff
-		   #:open-log-file
 		   #:with-open-log-file
 		   #:set-alert-file-name
 		   #:maybe-open-log-file

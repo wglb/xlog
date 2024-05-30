@@ -129,7 +129,8 @@
    'dates'              - include dates in log file name. See dates-ymd for format choices.
    'extension'          - (file type, in cl terminology) normally 'log'
    'dir'                - directory for log file
-   'show-log-file-name' - Before opening the log file, show current log file name before opening
+   'show-log-file-name' - Before opening the log file, show current log file name before opening. A value of :both
+                          will 
    'append-or-replace'  - What to do if the log file already exists"
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
 		(prev-log-file (the-log-file)))
@@ -217,6 +218,18 @@
     (close *alertfile*))
   (setf *alertfile* nil))
 
+(defun xalert (str)
+  "Write an alert, copied to the log file"
+  (open-alert-file)
+  (write-line (formatted-current-time-micro str)
+			  (the-alert-file))
+  (xlog str)
+  (close-alert-file))
+
+(defmacro xalertf (fmt &rest vars)
+  "Write with format to alsert"
+  `(xalert (format nil ,fmt ,@vars)))
+
 (defun xlog (str)
   "Write string 'str' time-stamped to the log file"
   (fresh-line (the-log-file))
@@ -235,18 +248,6 @@
   "Write with format to log file"
   `(xlog (format nil ,fmt ,@vars)))
 
-(defun xalert (str)
-  "Write an alert, copied to the log file"
-  (open-alert-file)
-  (write-line (formatted-current-time-micro str)
-			  (the-alert-file))
-  (xlog str)
-  (close-alert-file))
-
-(defmacro xalertf (fmt &rest vars)
-  "Write with format to alsert"
-  `(xalert (format nil ,fmt ,@vars)))
-
 (defmacro xlogff (fmt &rest vars)
   "Write with format to log file"
   `(prog1
@@ -254,7 +255,7 @@
     (force-output (the-log-file))))
 
 (defmacro xlogft (fmt &rest vars) 
-  "write formatted to log file and console"
+  "Write formatted to log file and console"
   (let ((str (gensym)))
     `(let ((,str (format nil ,fmt ,@vars)))
 	   (let ((rv (xlogf "~A" ,str)))
