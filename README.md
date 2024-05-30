@@ -41,10 +41,47 @@ Functions:
 
 ### Unpack a utc time that has hyphens.
 
-For an example string `2024-05-30 00:00:01.593760`
+For an example string `2024-05-30 00:00:01.593760`, answer multi-value seconds and milliseconds.
 
 ```common-lisp
 unpack-utc-with-hyphens(utc-string)
 ```
 
+
+### For a timestampe formatted by how long ago was the 'tim' timestamp,
+
+`2024-05-30 00:00:01.593760`
+
+```common-lisp
+calc-elapsed-time (tim)
+```
+### Produce a formatted timestamp from the current time 
+
+```common-lisp
+formatted-current-time-micro (str)
+```
+
+### Answer the mtime (formatted) of a file and its age
+
+```common-lisp
+formatted-file-time (filename)
+```
+
+### Format the current time
+
+```common-lisp
+formatted-current-time ()
+```
+
+### Format dates
+
+```common-lisp
+dates-ymd (datecmd)
+```
+
+`datecmd` 
+
+* `:hms` Format the date with month, day, year, hours, minutes, and seconds.
+* `:hour` Format the date with month, day, year, and hour
+* `t` Format the date year, month, day
 
