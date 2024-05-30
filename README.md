@@ -32,9 +32,9 @@ Features:
 
 Functions:
 
-`xlog-version`
+xlog-version
 - Answer the version  
 
-`unpack-utc-with-hyphens(utc-string)`
+unpack-utc-with-hyphens(utc-string)
 - Unpack a utc time that has hyphens.
 
