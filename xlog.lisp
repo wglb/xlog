@@ -23,7 +23,7 @@
   (slot-value (asdf:find-system 'xlog) 'asdf:version))
 
 (defun unpack-utc-with-hyphens(utc)
-  " Unpack a utc time with hyphens.
+  " Unpack a utc time that has hyphens.
     note that this expects hyphens, and does local time, not z"
   ;;             1111111111222222
   ;;   01234567890123456789012345
