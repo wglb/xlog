@@ -29,7 +29,6 @@ Quick look at features:
    The `with-open-log-file` macro wraps code in the manner of `with-open-file`. If you nest the calls, upon closing the nested
    open, the original one resumes. This can ease reading detail processes within a global process.
 
-
 ## Stackable log files
 
 Log files can be nested.  A second consecutive log file opening will push the existing log file and name onto a stack. 
@@ -166,3 +165,4 @@ xlogntf(fmt vars)
 xlogntft
 ```
 
+## Portability
