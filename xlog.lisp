@@ -124,6 +124,67 @@
 	  *alertfile*
 	  nil))
 
+(defun xalert (str)
+  "Write an alert, copied to the log file"
+  (open-alert-file)
+  (write-line (formatted-current-time-micro str)
+			  (the-alert-file))
+  (xlog str)
+  (close-alert-file))
+
+(defmacro xalertf (fmt &rest vars)
+  "Write with format to alsert"
+  `(xalert (format nil ,fmt ,@vars)))
+
+(defun xlog (str)
+  "Write string 'str' time-stamped to the log file"
+  (fresh-line (the-log-file))
+  (write-line (formatted-current-time-micro str) (the-log-file)))
+
+(defun xlognt (str)
+  "Write string 'str' to the log file without time stamp. Ensure that the line is fresh."
+  (fresh-line (the-log-file))
+  (write-line str (the-log-file)))
+
+(defun xlogfin ()
+  "Flush the log file output"
+  (force-output (the-log-file)))
+
+(defmacro xlogf (fmt &rest vars)
+  "Write with format to log file"
+  `(xlog (format nil ,fmt ,@vars)))
+
+(defmacro xlogff (fmt &rest vars)
+  "Write with format to log file"
+  `(prog1
+    (xlog (format nil ,fmt ,@vars))
+    (force-output (the-log-file))))
+
+(defmacro xlogft (fmt &rest vars) 
+  "Write formatted to log file and console"
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+	   (let ((rv (xlogf "~A" ,str)))
+		 (fresh-line)
+		 (format t "~A~%" rv)
+		 (xlogfin)
+		 rv))))
+
+(defmacro xlogntf (fmt &rest vars) 
+  "Write formatted to log file without time stamp"
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+       (xlognt ,str))))
+
+(defmacro xlogntft (fmt &rest vars) 
+  "Write formatted entry to log file without timestamp"
+  (let ((str (gensym)))
+    `(let ((,str (format nil ,fmt ,@vars)))
+	   (fresh-line)
+       (format t "~a" ,str)
+       (format t "~%")
+       (xlognt ,str))))
+
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   "Open a log file.
    'dates'              - include dates in log file name. See dates-ymd for format choices.
@@ -217,67 +278,6 @@
     (force-output *alertfile*)
     (close *alertfile*))
   (setf *alertfile* nil))
-
-(defun xalert (str)
-  "Write an alert, copied to the log file"
-  (open-alert-file)
-  (write-line (formatted-current-time-micro str)
-			  (the-alert-file))
-  (xlog str)
-  (close-alert-file))
-
-(defmacro xalertf (fmt &rest vars)
-  "Write with format to alsert"
-  `(xalert (format nil ,fmt ,@vars)))
-
-(defun xlog (str)
-  "Write string 'str' time-stamped to the log file"
-  (fresh-line (the-log-file))
-  (write-line (formatted-current-time-micro str) (the-log-file)))
-
-(defun xlognt (str)
-  "Write string 'str' to the log file without time stamp. Ensure that the line is fresh."
-  (fresh-line (the-log-file))
-  (write-line str (the-log-file)))
-
-(defun xlogfin ()
-  "Flush the log file output"
-  (force-output (the-log-file)))
-
-(defmacro xlogf (fmt &rest vars)
-  "Write with format to log file"
-  `(xlog (format nil ,fmt ,@vars)))
-
-(defmacro xlogff (fmt &rest vars)
-  "Write with format to log file"
-  `(prog1
-    (xlog (format nil ,fmt ,@vars))
-    (force-output (the-log-file))))
-
-(defmacro xlogft (fmt &rest vars) 
-  "Write formatted to log file and console"
-  (let ((str (gensym)))
-    `(let ((,str (format nil ,fmt ,@vars)))
-	   (let ((rv (xlogf "~A" ,str)))
-		 (fresh-line)
-		 (format t "~A~%" rv)
-		 (xlogfin)
-		 rv))))
-
-(defmacro xlogntf (fmt &rest vars) 
-  "Write formatted to log file without time stamp"
-  (let ((str (gensym)))
-    `(let ((,str (format nil ,fmt ,@vars)))
-       (xlognt ,str))))
-
-(defmacro xlogntft (fmt &rest vars) 
-  "Write formatted entry to log file without timestamp"
-  (let ((str (gensym)))
-    `(let ((,str (format nil ,fmt ,@vars)))
-	   (fresh-line)
-       (format t "~a" ,str)
-       (format t "~%")
-       (xlognt ,str))))
 
 (defun test-log-file ()
   "Test log file nesting"
