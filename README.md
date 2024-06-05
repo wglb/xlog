@@ -4,7 +4,7 @@ Application logging library
 
 Quick look at features:
 
-* Optinally Time-stamped formatted log enttries
+* Optionally Time-stamped formatted log entries
    2021-10-27 13:55:36.423013 xlog: end of log-file 2021-10-27_dispatch-rescancanm.log
 * Log files can be appended to or superseded
    
