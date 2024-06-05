@@ -214,7 +214,9 @@
 	  (handler-case
 		  (let ((nlf (open (ensure-directories-exist pathname)
 						   :direction :output
-						   :if-exists append-or-replace
+						   :if-exists (if (eq append-or-replace :REPLACE)
+										  :supersede
+										  append-or-replace)
 						   :if-does-not-exist :create
 						   :external-format :utf8)))
 			(if show-log-file-name
