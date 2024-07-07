@@ -1,0 +1,4 @@
+*.log
+*.fnd
+*.txt
+./emacs.desktop*
