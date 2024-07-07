@@ -282,7 +282,6 @@
   (setf *alertfile* nil))
 
 (defun test-log-file ()
-  "test nesting of log files"
   "Test log file nesting"
   (with-open-log-file ("original")
 	(xlogntf "this is a original")
