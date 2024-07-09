@@ -5,7 +5,6 @@
 
 (in-package #:xlog)
 
-
 (defvar *log-file*)
 
 (defvar *the-log-file-name*)
