@@ -1,5 +1,4 @@
 #!/bin/sh
-git push  --repo=github
-git push
-# Maybe?
+# after commit, try this
 git push park main
+git push
