@@ -83,21 +83,24 @@
       (decode-universal-time (get-universal-time))
     (declare (ignore doy))
     (let* ((filename 
-			(cond ((equal dates :hms)
-                   (format nil
-                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
-                           y m d 
-                           (+ h offset (if dstflag -1 0))
-                           min s))
-				  ((equal dates :hour)
-                   (format nil
-                           "~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
-                           y m d 
-						   h))
-                  (dates (format nil
-                                 "~4,'0D-~2,'0D-~2,'0D_"
-                                 y m d))
-                  (t (format nil "")))))
+			 (cond ((equal dates :hms)
+					(format nil
+							"~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
+							y m d 
+							(+ h offset (if dstflag -1 0))
+							min s))
+				   ((equal dates :hour)
+					(format nil
+							"~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
+							y m d h))
+				   ((equal dates :ym)
+					(format nil
+							"~4,'0D-~2,'0D_"
+							y m))
+                   (dates (format nil
+                                  "~4,'0D-~2,'0D-~2,'0D_"
+                                  y m d))
+                   (t (format nil "")))))
       filename)))
 
 (defparameter *debug-level* 4)
