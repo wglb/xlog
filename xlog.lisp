@@ -105,6 +105,8 @@
 
 (defparameter *debug-level* 4)
 
+(declaim (fixnum *debug-level*))
+
 (defmacro debugc (val stmt)
   "Conditional debug"
   `(when (<= ,val *debug-level*)
