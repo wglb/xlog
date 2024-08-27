@@ -199,6 +199,7 @@
    'append-or-replace'  - What to do if the log file already exists"
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
 		(prev-log-file (the-log-file)))
+	(declare (ignorable prev-log-file))
 	(when (the-log-file)
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
@@ -224,12 +225,7 @@
 						   :if-does-not-exist :create
 						   :external-format :utf8)))
 			(if show-log-file-name
-				(xlogft "xlog: nest, ~%    cur ~s ~%    new ~s"
-						(if prev-log-file
-							(if (the-log-file)
-								(probe-file (the-log-file))
-								"<none>")
-							"<none>")
+				(xlogft "xlog: nest, new: ~s"
 						(if nlf
 							(probe-file nlf)
 							"<none>")))
