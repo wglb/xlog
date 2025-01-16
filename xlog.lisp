@@ -22,7 +22,7 @@
   (slot-value (asdf:find-system 'xlog) 'asdf:version))
 
 (defun unpack-utc-with-hyphens(utc)
-  " Unpack a utc time that has hyphens.
+  "Unpack a utc time that has hyphens.
     note that this expects hyphens, and does local time, not z"
   ;;             1111111111222222
   ;;   01234567890123456789012345
@@ -181,7 +181,7 @@
        (xlognt ,str))))
 
 (defmacro xlogntft (fmt &rest vars) 
-  "Write formatted entry to log file without timestamp"
+  "Write formatted entry to log file and terminal without timestamp"
   (let ((str (gensym)))
     `(let ((,str (format nil ,fmt ,@vars)))
 	   (fresh-line)
