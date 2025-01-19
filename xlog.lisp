@@ -229,13 +229,11 @@
 						(if nlf
 							(probe-file nlf)
 							"<none>")))
-			(setf *log-file* nlf))
-		
+			(setf *log-file* nlf)
+			(xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))
 		(error (d)
-		  (format t "open-log-file: error ~a for log file ~a~%" d pathname)
-		  (setf *log-file* nil)))
-	  
-	  (xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))))
+		  (xlogf "open-log-file: error ~a for log file ~a~%" d pathname)
+		  (setf *log-file* nil))))))
 
 (defun close-log-file ()
   "Close the the log file, make the previous log file current"
