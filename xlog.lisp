@@ -203,14 +203,13 @@
 	(when (the-log-file)
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
-	(let* ((*print-pretty* nil)
+	(let ((*print-pretty* nil)
            (pathname 
 			 (cond ((consp dir)
 					(make-pathname :directory `,dir :name filename :type extension ))
 
 				   (dir 
-					(let ((pth (make-pathname :directory `,dir :name filename :type extension )))
-					  pth))
+					(make-pathname :directory `,dir :name filename :type extension ))
 				   
                    (t 
 					(make-pathname :name filename :type extension)))))
