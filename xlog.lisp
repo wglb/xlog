@@ -205,10 +205,11 @@
 	  (push *the-log-file-name* *log-file-name-stack*))
 	(let* ((*print-pretty* nil)
            (pathname 
-			 (cond (dir 
-					(debugc 5 (xlogntf "xlog: odd case of ~a ~s" dir (type-of dir)))
+			 (cond ((consp dir)
+					(make-pathname :directory `,dir :name filename :type extension ))
+
+				   (dir 
 					(let ((pth (make-pathname :directory `,dir :name filename :type extension )))
-					  (debugc 5 (xlogntf "xlog: resulting odd case path ~s" pth))
 					  pth))
 				   
                    (t 
