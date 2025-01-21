@@ -232,7 +232,9 @@
 			(setf *log-file* nlf)
 			(xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))
 		(error (d)
-		  (xlogf "open-log-file: error ~a for log file ~a~%" d pathname)
+		  (xlogf "open-log-file: error ~a for log file dir ~s pathname ~s~%" d dir pathname)
+		  (setf *log-file* (pop *log-file-stack*))
+		  (setf *the-log-file-name* (pop *log-file-name-stack*))
 		  (setf *log-file* nil))))))
 
 (defun close-log-file ()
