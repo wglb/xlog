@@ -195,7 +195,7 @@
    'extension'          - (file type, in cl terminology) normally 'log'
    'dir'                - directory for log file
    'show-log-file-name' - Before opening the log file, show current log file name before opening. A value of :both
-                          will 
+                          will also show new file to be opened
    'append-or-replace'  - What to do if the log file already exists"
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
 		(prev-log-file (the-log-file)))
