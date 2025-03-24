@@ -97,6 +97,10 @@
 					(format nil
 							"~4,'0D-~2,'0D_"
 							y m))
+				   ((equal dates :ymd)
+					(format nil
+                            "~4,'0D-~2,'0D-~2,'0D"
+                            y m d))
                    (dates (format nil
                                   "~4,'0D-~2,'0D-~2,'0D_"
                                   y m d))
