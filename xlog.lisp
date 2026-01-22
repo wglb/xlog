@@ -193,6 +193,13 @@
        (format t "~%")
        (xlognt ,str))))
 
+(defun xlog-blast (message)
+  "Write message to the current log and every log in the parent stack."
+  (let ((targets (remove nil (cons (the-log-file) *log-file-stack*))))
+    (dolist (out targets)
+      (format out "~&[BLAST] ~A ~A~%" (formatted-current-time) message)
+      (force-output out))))
+
 (defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
   "Open a log file.
    'dates'              - include dates in log file name. See dates-ymd for format choices.
@@ -208,15 +215,15 @@
       (push (the-log-file) *log-file-stack*)
 	  (push *the-log-file-name* *log-file-name-stack*))
 	(let ((*print-pretty* nil)
-           (pathname 
-			 (cond ((consp dir)
-					(make-pathname :directory `,dir :name filename :type extension ))
+          (pathname 
+			(cond ((consp dir)
+				   (make-pathname :directory `,dir :name filename :type extension ))
 
-				   (dir 
-					(make-pathname :directory `,dir :name filename :type extension ))
+				  (dir 
+				   (make-pathname :directory `,dir :name filename :type extension ))
 				   
-                   (t 
-					(make-pathname :name filename :type extension)))))
+                  (t 
+				   (make-pathname :name filename :type extension)))))
 	  (setq *the-log-file-name* pathname)
       (when (equal show-log-file-name :both)
 		(xlogntft "xlog: opening log pathname as ~a~%" pathname))
@@ -258,6 +265,10 @@
 	   (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
 	   (unwind-protect (progn ,@body)
 		 (close-log-file )))))
+
+(defmacro w/log (filespec &body body)
+  "Minimalist wrapper for with-open-log-file."
+  `(with-open-log-file ,filespec ,@body))
 
 (defparameter *alert-file-name* "alert-file")
 

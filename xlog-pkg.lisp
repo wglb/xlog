@@ -15,6 +15,8 @@
            #:xlogntft
            #:xlogff
 		   #:with-open-log-file
+		   #:w/log
+		   #:xlog-blast
 		   #:set-alert-file-name
            #:formatted-current-time
 		   #:formatted-current-time-micro 
