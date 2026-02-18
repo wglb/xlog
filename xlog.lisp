@@ -208,6 +208,8 @@
    'show-log-file-name' - Before opening the log file, show current log file name before opening. A value of :both
                           will also show new file to be opened
    'append-or-replace'  - What to do if the log file already exists"
+
+  ;; TODO: this does not work for some reason "/home/data7/projects/mspurr-audits/fastapi/job-id-fastapi-part1.sxp"
   (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
 		(prev-log-file (the-log-file)))
 	(declare (ignorable prev-log-file))
@@ -226,7 +228,7 @@
 				   (make-pathname :name filename :type extension)))))
 	  (setq *the-log-file-name* pathname)
       (when (equal show-log-file-name :both)
-		(xlogntft "xlog: opening log pathname as ~a~%" pathname))
+		(xlogntft "xlog: opening log pathname as ~a" pathname))
 	  (handler-case
 		  (let ((nlf (open (ensure-directories-exist pathname)
 						   :direction :output
