@@ -1,4 +1,6 @@
-;;;; package.lisp
+;;;; xlog-pkg.lisp
+;;;; Copyright (c) 2008-2026 Ciex-Security <wgl@ciex-security.com>
+;;;; License: MIT
 
 (defpackage #:xlog
   (:use #:cl #:uiop)
