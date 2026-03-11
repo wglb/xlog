@@ -268,7 +268,10 @@
 (defun close-log-file ()
   "Close the the log file, make the previous log file current"
   (when *current-log-entry*
-	(xlogf "xlog: end of log-file ~a" (log-stack-entry-name *current-log-entry*))
+    (multiple-value-bind (s min h d m y)
+        (decode-universal-time (log-stack-entry-opened-at *current-log-entry*))
+      (xlogf "xlog: end of log-file ~a, opened at ~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
+             (log-stack-entry-name *current-log-entry*) y m d h min s))
     (force-output (log-stack-entry-stream *current-log-entry*))
     (close (log-stack-entry-stream *current-log-entry*)))
   (setf *current-log-entry* (pop *log-stack*)))
