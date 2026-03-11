@@ -23,15 +23,16 @@
 
 (declaim (optimize (speed 0) (safety 3) (debug 3) (space 0)))
 
-(in-package #:xlog)
+(defstruct log-stack-entry
+  "Holds data for a single log file, including name, stream, and opening time."
+  name
+  stream
+  (opened-at (get-universal-time) :type integer))
 
-(defvar *log-file*)
-
-(defvar *the-log-file-name*)
-
-(defparameter *log-file-stack* nil)
-
-(defparameter *log-file-name-stack* nil)
+(defvar *current-log-entry* nil
+  "The current log-stack-entry. NIL if no log file is open.")
+(defparameter *log-stack* nil
+  "A stack of parent log-stack-entry structures, for nested logging.")
 
 (defvar *alertfile*)
 
@@ -141,10 +142,9 @@
 	`,stmt))
 
 (defun the-log-file ()
-  "Answer the log file"
-  (if (boundp '*log-file*)
-	  *log-file*
-	  nil))
+  "Answer the log file stream from the current entry."
+  (when *current-log-entry*
+    (log-stack-entry-stream *current-log-entry*)))
 
 (defun the-alert-file ()
   "Answer the alert file"
@@ -215,7 +215,8 @@
 
 (defun xlog-blast (message)
   "Write message to the current log and every log in the parent stack."
-  (let ((targets (remove nil (cons (the-log-file) *log-file-stack*))))
+  (let ((targets (remove nil (cons (the-log-file)
+                                   (mapcar #'log-stack-entry-stream *log-stack*)))))
     (dolist (out targets)
       (format out "~&[BLAST] ~A ~A~%" (formatted-current-time) message)
       (force-output out))))
@@ -230,14 +231,11 @@
    'append-or-replace'  - What to do if the log file already exists"
 
   ;; TODO: this does not work for some reason "/home/data7/projects/mspurr-audits/fastapi/job-id-fastapi-part1.sxp"
-  (let ((filename (format nil "~A~A" (dates-ymd dates) basename))
-		(prev-log-file (the-log-file)))
-	(declare (ignorable prev-log-file))
-	(when (the-log-file)
-      (push (the-log-file) *log-file-stack*)
-	  (push *the-log-file-name* *log-file-name-stack*))
-	(let ((*print-pretty* nil)
-          (pathname 
+  (let ((filename (format nil "~A~A" (dates-ymd dates) basename)))
+	(when *current-log-entry*
+      (push *current-log-entry* *log-stack*))
+	(let* ((*print-pretty* nil)
+           (pathname 
 			(cond ((consp dir)
 				   (make-pathname :directory `,dir :name filename :type extension ))
 
@@ -246,7 +244,6 @@
 				   
                   (t 
 				   (make-pathname :name filename :type extension)))))
-	  (setq *the-log-file-name* pathname)
       (when (equal show-log-file-name :both)
 		(xlogntft "xlog: opening log pathname as ~a" pathname))
 	  (handler-case
@@ -257,27 +254,24 @@
 										  append-or-replace)
 						   :if-does-not-exist :create
 						   :external-format :utf8)))
+            (setf *current-log-entry* (make-log-stack-entry :name pathname :stream nlf))
 			(if show-log-file-name
 				(xlogft "xlog: nest, new: ~s"
 						(if nlf
 							(probe-file nlf)
 							"<none>")))
-			(setf *log-file* nlf)
 			(xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))
 		(error (d)
 		  (xlogf "open-log-file: error ~a for log file dir ~s pathname ~s~%" d dir pathname)
-		  (setf *log-file* (pop *log-file-stack*))
-		  (setf *the-log-file-name* (pop *log-file-name-stack*))
-		  (setf *log-file* nil))))))
+		  (setf *current-log-entry* (pop *log-stack*)))))))
 
 (defun close-log-file ()
   "Close the the log file, make the previous log file current"
-  (when (the-log-file)
-	(xlogf "xlog: end of log-file ~a" *the-log-file-name*)
-    (force-output (the-log-file))
-    (close (the-log-file)))
-  (setf *log-file* (pop *log-file-stack*))
-  (setf *the-log-file-name* (pop *log-file-name-stack*)))
+  (when *current-log-entry*
+	(xlogf "xlog: end of log-file ~a" (log-stack-entry-name *current-log-entry*))
+    (force-output (log-stack-entry-stream *current-log-entry*))
+    (close (log-stack-entry-stream *current-log-entry*)))
+  (setf *current-log-entry* (pop *log-stack*)))
 
 (defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
 							  &body body)
@@ -319,10 +313,44 @@
   (setf *alertfile* nil))
 
 (defun test-log-file ()
-  "Test log file nesting"
-  (with-open-log-file ("original")
-	(xlogntf "this is a original")
-	(with-open-log-file ("inner")
-	  (xlogntf "this is a drawer in the desk"))
-	(xlogntf "this should be another original"))
-  (xlogntf "This should go nowhere"))
+  "Test log file nesting, blast, and content verification."
+  ;; 1. Clean up previous test files to ensure a fresh start.
+  (uiop:delete-file-if-exists "original.log")
+  (uiop:delete-file-if-exists "inner.log")
+
+  ;; 2. Run the logging operations.
+  (with-open-log-file ("original" :dates nil :show-log-file-name nil)
+    (xlogntf "message for original")
+    (with-open-log-file ("inner" :dates nil :show-log-file-name nil)
+      (xlogntf "message for inner")
+      (xlog-blast "this is a blast"))
+    (xlogntf "another message for original"))
+  (xlogntf "This should go to stdout, not a file.")
+
+  ;; 3. Read the contents of the generated log files.
+  (let ((original-content (uiop:read-file-string "original.log"))
+        (inner-content (uiop:read-file-string "inner.log")))
+
+    ;; 4. Define expected content for each file.
+    (let ((original-expects '("message for original"
+                              "[BLAST]"
+                              "this is a blast"
+                              "another message for original"))
+          (original-forbids '("message for inner"))
+          (inner-expects '("message for inner"
+                           "[BLAST]"
+                           "this is a blast"))
+          (inner-forbids '("message for original"
+                           "another message for original")))
+
+      ;; 5. Perform assertions.
+      (flet ((check-contents (content expects forbids filename)
+               (dolist (e expects)
+                 (assert (search e content) () "Missing expected string '~a' in ~a" e filename))
+               (dolist (f forbids)
+                 (assert (not (search f content)) () "Found forbidden string '~a' in ~a" f filename))))
+
+        (check-contents original-content original-expects original-forbids "original.log")
+        (check-contents inner-content inner-expects inner-forbids "inner.log")
+
+        (format t "~&test-log-file: All assertions passed.~%")))))

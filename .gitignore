@@ -4,3 +4,5 @@
 .emacs.desktop*
 push-both-notes.sh
 push-both-notes.sh~
+*~
+test
