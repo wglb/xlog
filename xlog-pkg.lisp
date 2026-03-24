@@ -28,4 +28,5 @@
            #:*debug-level*
            #:dates-ymd
 		   #:calc-elapsed-time
-           #:debugc))
+           #:debugc
+           #:test-log-file))
