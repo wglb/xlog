@@ -23,6 +23,8 @@ count-lines:
 	@wc -l $(LISP_FILES)
 
 # Clean up FASLs to prevent M1/M4 architecture conflicts
+
+all: test
+
 clean:
-	@echo "Cleaning ASDF cache for xlog..."
-	rm -rf ~/.cache/common-lisp/sbcl-*-macosx-arm64$(shell pwd)
+	rm -f test original.log inner.log

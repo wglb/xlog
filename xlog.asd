@@ -6,7 +6,7 @@
   :description "Application logger with nested stack support"
   :author "wgl@ciex-security.com"
   :license "MIT"
-  :version "1.3.40"
+  :version "1.4.1"
   :serial t
   :components ((:file "xlog-pkg")
                (:file "xlog")))
