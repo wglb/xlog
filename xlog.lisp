@@ -27,10 +27,12 @@
   "Holds data for a single log file, including name, stream, and opening time."
   name
   stream
-  (opened-at (get-universal-time) :type integer))
+  (opened-at (get-universal-time) :type integer)
+  quiet)
 
 (defvar *current-log-entry* nil
   "The current log-stack-entry. NIL if no log file is open.")
+
 (defparameter *log-stack* nil
   "A stack of parent log-stack-entry structures, for nested logging.")
 
@@ -221,7 +223,13 @@
       (format out "~&[BLAST] ~A ~A~%" (formatted-current-time) message)
       (force-output out))))
 
-(defun open-log-file (basename &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append))
+(defun open-log-file (basename
+					  &key (dates t)
+						(extension "log")
+						(dir nil)
+						(show-log-file-name t)
+						(append-or-replace :append)
+						(quiet nil))
   "Open a log file.
    'dates'              - include dates in log file name. See dates-ymd for format choices.
    'extension'          - (file type, in cl terminology) normally 'log'
@@ -254,13 +262,14 @@
 										  append-or-replace)
 						   :if-does-not-exist :create
 						   :external-format :utf8)))
-            (setf *current-log-entry* (make-log-stack-entry :name pathname :stream nlf))
+            (setf *current-log-entry* (make-log-stack-entry :name pathname :stream nlf :quiet quiet))
 			(if show-log-file-name
 				(xlogft "xlog: nest, new: ~s"
 						(if nlf
 							(probe-file nlf)
 							"<none>")))
-			(xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname))
+			(unless quiet
+			  (xlogf "xlog: ~a  beginning of log-file: ~a" append-or-replace pathname)))
 		(error (d)
 		  (xlogf "open-log-file: error ~a for log file dir ~s pathname ~s~%" d dir pathname)
 		  (setf *current-log-entry* (pop *log-stack*)))))))
@@ -270,8 +279,9 @@
   (when *current-log-entry*
     (multiple-value-bind (s min h d m y)
         (decode-universal-time (log-stack-entry-opened-at *current-log-entry*))
-      (xlogf "xlog: end of log-file ~a, opened at ~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
-             (log-stack-entry-name *current-log-entry*) y m d h min s))
+	  (unless (log-stack-entry-quiet *current-log-entry*)
+		(xlogf "xlog: end of log-file ~a, opened at ~4,'0D-~2,'0d-~2,'0d ~2,'0d:~2,'0d:~2,'0d"
+             (log-stack-entry-name *current-log-entry*) y m d h min s)))
     (force-output (log-stack-entry-stream *current-log-entry*))
     (close (log-stack-entry-stream *current-log-entry*)))
   (setf *current-log-entry* (pop *log-stack*)))
