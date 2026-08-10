@@ -286,12 +286,18 @@
     (close (log-stack-entry-stream *current-log-entry*)))
   (setf *current-log-entry* (pop *log-stack*)))
 
-(defmacro with-open-log-file ((filespec &key (dates t)  (extension "log") (dir nil) (show-log-file-name t) (append-or-replace :append)) 
+(defmacro with-open-log-file ((filespec
+							   &key (dates t)
+								 (extension "log")
+								 (dir nil)
+								 (show-log-file-name t)
+								 (append-or-replace :append)
+								 (quiet nil)) 
 							  &body body)
   "Wrap the log file open/close. See 'open-log-file' for parameters"
   `(progn
 	 (let ()
-	   (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace)
+	   (open-log-file ,filespec :dates ,dates :extension  ,extension :dir ,dir :show-log-file-name ,show-log-file-name  :append-or-replace ,append-or-replace :quiet ,quiet)
 	   (unwind-protect (progn ,@body)
 		 (close-log-file )))))
 
