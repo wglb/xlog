@@ -29,4 +29,5 @@
            #:dates-ymd
 		   #:calc-elapsed-time
            #:debugc
-           #:test-log-file))
+           #:test-log-file
+		   #:unpack-utc-with-hyphens))
