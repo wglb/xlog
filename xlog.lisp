@@ -99,7 +99,7 @@
       (declare (ignorable s))
       (format nil "~4,'0D-~2,'0d-~2,'0d-~2,'0d-~2,'0d" y m d h min))))
 
-(defun dates-ymd (dates)
+(defun dates-ymd (dates &optional (trailing-underscore "_"))
   "Create a file name from the current time, 
    including optionally hour, or hours minutes and seconds as part of the file name"
   (multiple-value-bind (s min h d m y doy dstflag offset)
@@ -108,25 +108,30 @@
     (let* ((filename 
 			 (cond ((equal dates :hms)
 					(format nil
-							"~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D_"
+							"~4,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D-~2,'0D~a"
 							y m d 
 							(+ h offset (if dstflag -1 0))
-							min s))
+							min s
+							trailing-underscore))
 				   ((equal dates :hour)
 					(format nil
-							"~4,'0D-~2,'0D-~2,'0D-~2,'0D_"
-							y m d h))
+							"~4,'0D-~2,'0D-~2,'0D-~2,'0D~a"
+							y m d h
+							trailing-underscore))
 				   ((equal dates :ym)
 					(format nil
-							"~4,'0D-~2,'0D_"
-							y m))
+							"~4,'0D-~2,'0D~a"
+							y m
+							trailing-underscore))
 				   ((equal dates :ymd)
 					(format nil
-                            "~4,'0D-~2,'0D-~2,'0D_"
-                            y m d))
+                            "~4,'0D-~2,'0D-~2,'0D~a"
+                            y m d
+							trailing-underscore))
                    (dates (format nil
-                                  "~4,'0D-~2,'0D-~2,'0D_"
-                                  y m d))
+                                  "~4,'0D-~2,'0D-~2,'0D~a"
+                                  y m d
+								  trailing-underscore))
                    (t (format nil "")))))
       filename)))
 
